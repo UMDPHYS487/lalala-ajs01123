@@ -1,0 +1,64 @@
+// Define constants
+const int squareWavePin=3;
+int cycle=0;
+int Pcoeff=3;
+int TI=25;
+float Error;
+float IntegratedError=0;
+float setpoint=35.0;
+
+float R2=10000.0;
+float Vi =5.0;
+float R1;
+
+float B=24;
+float Ti=23.3;
+float T;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  pinMode(squareWavePin,OUTPUT);
+}
+
+float Resistance(int pinVal) {
+
+  float Vo = 5 * (pinVal / 1023.0);
+  float R1=R2*(Vi/Vo - 1);
+  return R1;
+
+}
+
+float Temperature(float Resistance) {
+  T=1/(1/B*log(Resistance/R2)+1/Ti);
+  return T;
+}
+
+void loop() {
+
+  int Output=analogRead(A0);   // Read current value of pin A0
+  R1=Resistance(Output); // Calculate the resistance of the thermistor
+  T=Temperature(R1); // Calculate the temperature of the heater
+
+  Error=setpoint-T; // Determine the error between the current temperature and the setpoint
+  IntegratedError=(Error+IntegratedError); // Integrate the error numerically
+  cycle=Pcoeff*(Error+IntegratedError/TI); // Determine the next value governing the current to applied to the heater
+
+// Set limits to ensure that values are safe and physical
+if (cycle > 120){
+  cycle = 120;
+}
+if (cycle < 1){
+  cycle = 0;
+}
+
+// Update displayed values
+  analogWrite(squareWavePin,cycle);
+  Serial.print(Pcoeff*Error);
+  Serial.print(",");
+  Serial.print(Pcoeff*IntegratedError/TI);
+  Serial.print(",");
+  Serial.println(T);
+
+delay(10000); // Delay appropriately before the next loop
+}
