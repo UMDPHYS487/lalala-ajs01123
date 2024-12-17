@@ -1,0 +1,27 @@
+// Define constants
+const int squareWavePin=3; // needs to be changed, so we can have two sources at the same time...
+int cycle=0;
+int off=180;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  pinMode(squareWavePin,OUTPUT);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+cycle=cycle+2;
+  if (cycle==254) {
+    cycle =0;
+    off=1;
+  }
+  if (off==1) {
+    cycle=0;
+  }
+analogWrite(squareWavePin,cycle);
+int Output=analogRead(A1);
+Serial.println(Output);
+delay(1000);
+}
