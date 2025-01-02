@@ -1,6 +1,6 @@
 // Define constants
 const int squareWavePin=3; // needs to be changed, so we can have two sources at the same time...
-int cycle=0;
+int cycle=126;
 int off=180;
 
 void setup() {
@@ -13,15 +13,17 @@ void loop() {
   // put your main code here, to run repeatedly:
 
 cycle=cycle+2;
-  if (cycle==254) {
+  if (cycle==226) {
     cycle =0;
     off=1;
   }
   if (off==1) {
     cycle=0;
+    analogWrite(squareWavePin,cycle);
+    exit(0);
   }
 analogWrite(squareWavePin,cycle);
-int Output=analogRead(A1);
+int Output=analogRead(A5);
 Serial.println(Output);
 delay(1000);
 }
