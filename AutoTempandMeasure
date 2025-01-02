@@ -1,0 +1,103 @@
+// Define constants
+const int IVsquareWavePin=3; // 
+const int TempControlPin=5;
+int cycle=110;
+int off=180;
+
+int TempControlcycle=0;
+int Pcoeff=10;
+int TI=25;
+float Error=100;
+float IntegratedError=0;
+float setpoint=50;
+
+float R2=10000.0;
+float Vi =5.0;
+float R1;
+
+float B=24;
+float Ti=23.3;
+float T;
+
+float Threshold=1.0;
+
+int Start=0;
+
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  pinMode(IVsquareWavePin,OUTPUT);
+  pinMode(TempControlPin,OUTPUT);
+}
+
+float Resistance(int pinVal) {
+
+  float Vo = 5 * (pinVal / 1023.0);
+  float R1=R2*(Vi/Vo - 1);
+  return R1;
+
+}
+
+float Temperature(float Resistance) {
+  T=1/(1/B*log(Resistance/R2)+1/Ti);
+  return T;
+}
+
+void loop() {
+
+// Temperature control
+  int Output=analogRead(A0);   // Read current value of pin A0
+  R1=Resistance(Output); // Calculate the resistance of the thermistor
+  T=Temperature(R1); // Calculate the temperature of the heater
+
+  Error=setpoint-T; // Determine the error between the current temperature and the setpoint
+  IntegratedError=(Error+IntegratedError); // Integrate the error numerically
+  TempControlcycle=Pcoeff*(Error+IntegratedError/TI); // Determine the next value governing the current to applied to the heater
+
+// Set limits to ensure that values are safe and physical
+if (TempControlcycle > 150){
+  TempControlcycle = 150;
+}
+if (TempControlcycle < 1){
+  TempControlcycle = 0;
+}
+analogWrite(TempControlPin,TempControlcycle);
+
+// Update displayed values
+if((abs(Error)>=abs(Threshold)) && (Start==0)) {
+  Serial.print(T);
+  Serial.print(",");
+  Serial.print(Pcoeff*Error);
+  Serial.print(",");
+  Serial.println(Pcoeff*IntegratedError/TI);
+  delay(10000);
+} else {
+   Start=1;
+}
+if(Start==1) {
+  // IV measurement and exit once temperature setpoint is reached
+cycle=cycle+2;
+  if (cycle==226) {
+    cycle =0;
+    off=1;
+  }
+  if (off==1) {
+    cycle=0;
+    analogWrite(IVsquareWavePin,cycle);
+    analogWrite(TempControlPin,cycle);
+    exit(0);
+  }
+analogWrite(IVsquareWavePin,cycle);
+int IVOutput=analogRead(A5);
+int Voltage=analogRead(A4);
+
+Serial.print(T);
+Serial.print("\t");
+Serial.print(Voltage);
+Serial.print("\t");
+Serial.println(IVOutput);
+delay(1000);
+}
+
+}
