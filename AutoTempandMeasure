@@ -97,7 +97,9 @@ Serial.print("\t");
 Serial.print(Voltage);
 Serial.print("\t");
 Serial.println(IVOutput);
-delay(1000);
+delay(2000);
+}
+
 }
 
 }
